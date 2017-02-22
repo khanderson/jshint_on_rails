@@ -54,7 +54,7 @@ module JSHint
     end
 
     def option_string
-      @config.map { |k, v| "#{k}=#{v.inspect}" }.join('&')
+      @config.map { |k, v| "#{k}=#{to_json(v)}" }.join('&')
     end
 
     def check_java
@@ -73,6 +73,21 @@ module JSHint
       path_list = [path_list] unless path_list.is_a?(Array)
       file_list = path_list.map { |p| Dir[p] }.flatten
       Utils.unique_files(file_list)
+    end
+
+    def to_json(obj)
+      case obj
+      when Hash
+        "({" + obj.map{ |key, val| %["#{key}": #{to_json(val)}] }.join(",") + "})"
+      when Array
+        "[" + obj.map{ |val| to_json(obj) }.join(",") + "]"
+      when String, Fixnum, TrueClass, FalseClass
+        obj.inspect
+      when NilClass
+        "null"
+      else
+        raise ArgumentError, "Don't know how to convert #{obj.class.name} to JSON"
+      end
     end
 
   end
